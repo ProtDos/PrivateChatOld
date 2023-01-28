@@ -114,6 +114,14 @@ def get_password(username):
     return None
 
 
+def get_public(idd):
+    try:
+        with open(f"public_{idd}.txt", "rb") as file:
+            return file.read()
+    except:
+        return None
+
+
 class Encrypt:
     def __init__(self, message_, key):
         self.message = message_
@@ -346,6 +354,8 @@ def receive():
             elif xxx.startswith("SIGNUP:::"):
                 print("ye")
                 _, username, pas, idd = xxx.split(":::")
+                public_key = client.recv(1024).decode()
+
                 print(username, pas, idd)
                 if check_username_exist(username):
                     client.send("error".encode())
@@ -356,6 +366,8 @@ def receive():
                     else:
                         with open("database.csv", "a") as data_file_:
                             data_file_.write(f"{username},{pas},{idd}\n")
+                        with open(f"public_{idd}.txt", "w") as file:
+                            file.write(public_key)
                         client.send("success".encode())
             elif xxx.startswith("LOGIN:::"):
                 _, username, password = xxx.split(":::")
@@ -411,6 +423,18 @@ def receive():
                 except Exception:
                     print("da fuck")
                     pass
+            elif xxx.startswith("GET_PUBLIC:"):
+                idd = xxx.split(":")[1]
+                if check_id_exist(idd):
+                    print("Ok")
+                    aa = get_public(idd)
+                    if aa:
+                        client.send(aa)
+                    else:
+                        client.send(b"error")
+                else:
+                    print("nah")
+                    client.send(b"error")
             else:
                 if xxx.startswith("ID:::::"):
                     _, nickname, group_id = xxx.split("|||")
@@ -426,7 +450,8 @@ def receive():
 
         except KeyboardInterrupt:
             exit()
-        except:
+        except Exception as e:
+            print(e)
             print("Client disconnected.")
 
 

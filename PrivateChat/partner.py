@@ -493,7 +493,7 @@ class ChatApp(MDApp):
             return
         else:
             pass
-        with open("private_key.txt", "w") as file:
+        with open("private_key2.txt", "w") as file:
             file.write(private.save_pkcs1().decode())
         with open("public_key.txt", "w") as file:
             file.write(public.save_pkcs1().decode())
@@ -740,7 +740,7 @@ class ChatApp(MDApp):
         self.screen_manager.get_screen("chat_sec").chat_list.add_widget(Response2(text=message, size_hint_x=size, halign=halign))
 
     def receive_messages_private(self, key):
-        with open("private_key.txt", "rb") as private_file:
+        with open("private_key2.txt", "rb") as private_file:
             private = rr.PrivateKey.load_pkcs1(private_file.read())
         print(private)
         try:
@@ -764,10 +764,10 @@ class ChatApp(MDApp):
                     elif message.split("#")[1].startswith(current_chat_with):
                         _, *m = message.split("---")
                         m = "".join(m)
-                        # m = m[2:]
-                        # m = m[:-1]
-                        # print(m)
-                        # print(rr.decrypt(m.encode(), private).decode())
+                        m = m[2:]
+                        m = m[:-1]
+                        print(m)
+                        print(rr.decrypt(m.encode(), private).decode())
                         # m = Decrypt(message_=m, key=key).decrypt()
                         self.add(m)
                     elif message.startswith(f"INCOMING:{self.username}#{self.id}"):
@@ -914,8 +914,8 @@ class ChatApp(MDApp):
         key = rr.PublicKey.load_pkcs1(current_private_key)
         print(key)
         # sock.send(("/pm " + current_chat_with + " " + Encrypt(message_=message, key=key).encrypt().decode()).encode())
-        sock.send(("/pm " + current_chat_with + " " + message).encode())
-        # sock.send(f"/pm {current_chat_with} {rr.encrypt(message.encode(), key)}".encode())
+        # sock.send(("/pm " + current_chat_with + " " + message).encode())
+        sock.send(f"/pm {current_chat_with} {rr.encrypt(message.encode(), key)}".encode())
 
         global size, halign, value
         if message != "":
