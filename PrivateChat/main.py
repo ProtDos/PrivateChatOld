@@ -238,14 +238,14 @@ class ChatScreen(Screen):
                 halign = "left"
             self.change2(value, size, halign)
 
-            print(self.key)
+            # print(self.key)
             # sock.send("{}: {}".format(self.usr, value).encode())
             sock.send('{}: {}'.format(self.usr, Encrypt(message_=value, key=self.key).encrypt().decode()).encode())
 
             self.ids.text_input.text = ""
 
     def receive_message(self):
-        print("started")
+        # print("started")
         """Receive messages from the server and update the chat screen"""
         while True:
             if is_it_my_turn:
@@ -265,7 +265,7 @@ class ChatScreen(Screen):
                                 # print(filename)
 
                                 sender = sock.recv(1024).decode()
-                                print(sender)
+                                 # print(sender)
 
                                 al = []
 
@@ -338,11 +338,11 @@ class ChatScreen(Screen):
                                     size = .7
                                     halign = "left"
                                 self.change(message, sender, size, halign)
-                                print(message)
+                                print("Message:", message)
                         else:
                             break
                 except Exception as e:
-                    print(e)
+                    print("Error:", e)
                     continue
             time.sleep(5)
 
@@ -440,8 +440,11 @@ class ChatApp(MDApp):
         self.rooms = []
         self.mf_key_group_bla = ""
         self.super_dubba_key = ""
-        self.public_key = ""
-        self.private_key = ""
+
+        self.aaa = None
+
+        self.public_key = None
+        self.private_key = None
 
         self.screen_manager = ScreenManager()
         self.screen_manager.add_widget(Builder.load_file("login.kv"))
@@ -497,6 +500,8 @@ class ChatApp(MDApp):
             file.write(private.save_pkcs1().decode())
         with open("public_key.txt", "w") as file:
             file.write(public.save_pkcs1().decode())
+        self.public_key = public  # not needed
+        self.private_key = private
         """
         with open("data/username.txt", "w") as file:
             file.w rite(username)
@@ -546,12 +551,14 @@ class ChatApp(MDApp):
             """
             sock.send(f"LOGIN:::{username}:::{password}".encode())
             r = sock.recv(1024).decode()
-            print(r)
+            # print(r)
             if r == "error":
                 self.show_toaster("Invalid username")
             elif r == "errorv2":
                 self.show_toaster("Invalid password")
             else:
+                with open("private_key.txt", "rb") as file:
+                    self.private_key = rr.PrivateKey.load_pkcs1(file.read())
                 self.username = username
                 self.password = password
                 self.screen_manager.current = "home"
@@ -559,7 +566,7 @@ class ChatApp(MDApp):
                 _, idd = r.split(":")
                 self.id = idd
         except Exception as e:
-            print(e)
+            print("Errorv2:", e)
             self.screen_manager.current = "bad"
 
     def show_qr_code(self, key):
@@ -622,11 +629,11 @@ class ChatApp(MDApp):
             with open("data/groups.csv", "w") as f:
                 f.write("key\n")
                 for enc_key in encrypted_keys:
-                    print(enc_key)
+                    # print(enc_key)
                     dec_key = Decrypt(message_=enc_key, key=self.super_dubba_key).decrypt()
-                    print(dec_key)
+                     #print(dec_key)
                     enc_key2 = Encrypt(message_=dec_key, key=new).encrypt().decode()
-                    print(enc_key2)
+                     #print(enc_key2)
                     f.write(enc_key2 + "\n")
 
 
@@ -651,10 +658,11 @@ class ChatApp(MDApp):
         connect()
         sock.send(f"GET_PUBLIC:{rec}".encode())
         public_key = sock.recv(1024)
-        print(public_key)
+        print("Public key of rec:", public_key)
         if public_key != "error":
             public = rr.PublicKey.load_pkcs1(public_key)
-            print(public)
+            print("Loaded key of rec:", public)
+            self.aaa = public
 
             connect()
 
@@ -739,10 +747,8 @@ class ChatApp(MDApp):
                 halign = "left"
         self.screen_manager.get_screen("chat_sec").chat_list.add_widget(Response2(text=message, size_hint_x=size, halign=halign))
 
-    def receive_messages_private(self, key):
-        with open("private_key.txt", "rb") as private_file:
-            private = rr.PrivateKey.load_pkcs1(private_file.read())
-        print(private)
+    def receive_messages_private(self, _):
+        print("Personal private key:", self.private_key)
         try:
             with open(f"2/{current_chat_with}.txt", "r") as ii:
                 aa = ii.read().split("\n")
@@ -754,16 +760,19 @@ class ChatApp(MDApp):
             pass
         while True:
             try:
-                print(current_chat_with)
+                print("Chat with:", current_chat_with)
                 message = sock.recv(1024)
-                message = message.decode()
                 print(message)
+                message = message.decode()
+                print("Message received:", message)
                 if message:
                     if message == "NICK":
                         sock.send(self.username.encode())
                     elif message.split("#")[1].startswith(current_chat_with):
-                        _, *m = message.split("---")
-                        m = "".join(m)
+                        m = sock.recv(1024)
+                        print("Shorted message:", m)
+                        print("Decrypted:", rr.decrypt(m, self.private_key))
+                        m = rr.decrypt(m, self.private_key).decode()
                         # m = m[2:]
                         # m = m[:-1]
                         # print(m)
@@ -771,14 +780,14 @@ class ChatApp(MDApp):
                         # m = Decrypt(message_=m, key=key).decrypt()
                         self.add(m)
                     elif message.startswith(f"INCOMING:{self.username}#{self.id}"):
-                        _, m = message.split("|||")
-                        m = "".join(m)
-                        m = Decrypt(message_=m, key=key).decrypt()
+                        print("OOOOOKAY")
+                        m = sock.recv(1024)
+                        m = rr.decrypt(m, self.private_key).decode()
                         self.add(m)
                     else:
                         try:
                             sender, mess = message.split("---")
-                            print(rr.decrypt(mess, private).decode())
+                            print("Decrypted message:", rr.decrypt(mess, self.private_key).decode())
                             with open(f"2\\{sender}.txt", "a") as file:
                                 file.write(mess+"\n")
                             self.notify(f"New message from {sender}", mess)
@@ -788,7 +797,7 @@ class ChatApp(MDApp):
                 else:
                     break
             except Exception as e:
-                print(e)
+                print("Errorv3:", e)
                 continue
 
     def load_groups(self):
@@ -828,12 +837,12 @@ class ChatApp(MDApp):
             self.rooms = my_bitch_rooms
             for i, item in enumerate(my_bitch_rooms):
                 if item != "" and item != None:
-                    print("1")
+                    # print("1")
                     item = item.split("|")[0]
                     self.screen_manager.get_screen("group_join").group_list.add_widget(
                         Response(text=f"{i})-{item}", size_hint_x=.75))
         else:
-            print("2")
+            # print("2")
             self.screen_manager.get_screen("group_join").ok.text = "No groups available."
             self.screen_manager.get_screen("group_join").group_num.disabled = True
             self.screen_manager.get_screen("group_join").butt.disabled = True
@@ -893,13 +902,13 @@ class ChatApp(MDApp):
             group_id = str(uuid.uuid4())
             key = name + "|" + key + "|" + group_id
             group_key = key
-            print(key)
+            # print(key)
             self.screen_manager.get_screen("chat").kkk.text = key
             self.screen_manager.get_screen("chat").bot_name.text = name
             # self.screen_manager.get_screen("chat").key.text = key
             with open("data/groups.csv", "a") as file:
                 encc = Encrypt(message_=key, key=self.super_dubba_key).encrypt().decode()
-                print(encc)
+                # print(encc)
                 file.write(f"{encc}\n")
 
             connect()
@@ -911,10 +920,15 @@ class ChatApp(MDApp):
 
     @mainthread
     def send_message_private(self, message, _):
-        key = rr.PublicKey.load_pkcs1(current_private_key)
-        print(key)
+        print("Public key of partner loaded:", self.aaa)
         # sock.send(("/pm " + current_chat_with + " " + Encrypt(message_=message, key=key).encrypt().decode()).encode())
-        sock.send(("/pm " + current_chat_with + " " + message).encode())
+        enc = rr.encrypt(message.encode(), self.aaa)
+        print("Encrypted message:", enc)
+        sock.send(f"/pm {current_chat_with}".encode())
+        print("First sent")
+        sock.send(enc)
+        print("Second sent")
+        # sock.send(("/pm " + current_chat_with + " " + message).encode())
         # sock.send(f"/pm {current_chat_with} {rr.encrypt(message.encode(), key)}".encode())
 
         global size, halign, value

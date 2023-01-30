@@ -292,44 +292,165 @@ def handle_client(client, _, oho):
     for item in buffer:
         if item["from"] == p:
             print("yws")
+            print("FROM:", item["from"])
             send_message(item["from"], item["mess"], p, buf=True)
             buffer.remove(item)
     while True:
         try:
             request = client.recv(1024).decode()
+            message = client.recv(1024)
             print(request)
+            print(message)
             if request.startswith("/pm"):
-                _, idd, *mess = request.split(" ")
-                send_message(idd, mess, p, buf=False)
+                _, idd = request.split(" ")
+                send_message(idd, message, p, buf=False)
             else:
                 print("Invalid.")
             clients__pr[p] = client
-        except:
+        except Exception as e:
+            print(e)
             print("client disconnected.")
             break
 
 
 def send_message(idd, message, p, buf=True):
     print(idd, message, p)
-    idd = get_username(idd) + "#" + idd
     if buf:
         try:
+            """
             recipient_socket = clients__pr[idd]
-            message = " ".join(message)
-            recipient_socket.send(f"INCOMING:{p}|||{message}".encode())
+            recipient_socket.send(f"INCOMING:{p}|||".encode())
+            print("okay")
+            recipient_socket.send(message)
+            print("sent")
+            """
+            recipient_socket = clients__pr[idd]
+            print(idd)
+            recipient_socket.send(f"INCOMING:{p}|||".encode())
+            print("waiting")
+            time.sleep(0.5)
+            recipient_socket.send(message)
         except:
             buffer.append({"from": idd, "to": p, "mess": message})
             print("Sender not available.")
     else:
+        idd = get_username(idd) + "#" + idd
         try:
             recipient_socket = clients__pr[idd]
             print(idd)
-            message = " ".join(message)
-            recipient_socket.send(f"{p}---{message}".encode())
+            recipient_socket.send(f"{p}---".encode())
+            recipient_socket.send(message)
         except Exception as e:
             print(e)
             buffer.append({"from": idd, "to": p, "mess": message})
             print("Sender not available.")
+
+
+def fuck_around(client, address, d1):
+    xxx = client.recv(1024).decode()
+
+    print("X", xxx)
+    if xxx == "PRIV:":
+        print("private")
+        oho = "True"
+        client_thread = threading.Thread(target=handle_client, args=(client, address, oho,))
+        client_thread.start()
+    elif xxx.startswith("SIGNUP:::"):
+        print("ye")
+        _, username, pas, idd = xxx.split(":::")
+        public_key = client.recv(1024).decode()
+
+        print(username, pas, idd)
+        if check_username_exist(username):
+            client.send("error".encode())
+        else:
+
+            if check_id_exist(idd):
+                client.send("errorv2".encode())
+            else:
+                with open("database.csv", "a") as data_file_:
+                    data_file_.write(f"{username},{pas},{idd}\n")
+                with open(f"public_{idd}.txt", "w") as file:
+                    file.write(public_key)
+                client.send("success".encode())
+    elif xxx.startswith("LOGIN:::"):
+        _, username, password = xxx.split(":::")
+        print(username, password)
+        if not check_username_exist(username):
+            client.send("error".encode())
+        else:
+            pas = get_password(username)
+            if Decrypt(message_=pas, key=password).decrypt() is not None:
+                client.send(f"success:{get_id(username)}".encode())
+            else:
+                client.send("errorv2".encode())
+    elif xxx.startswith("CHANGE_USERNAME:"):
+        _, username, password, new_username = xxx.split(":")
+        if check_username_exist(username):
+            if Decrypt(message_=get_password(username), key=password).decrypt() is not None:
+                replace_value(username, new_username, "username")
+                client.send(b"success")
+            else:
+                client.send(b"error")
+        else:
+            client.send(b"error")
+    elif xxx.startswith("CHANGE_PASSWORD:"):
+        _, old, new, username = xxx.split(":")
+        if check_username_exist(username):
+            if Decrypt(message_=get_password(username), key=old).decrypt() is not None:
+                replace_value(get_password(username), Encrypt(message_=new, key=new).encrypt().decode(), "password")
+                client.send(b"success")
+            else:
+                client.send(b"error")
+        else:
+            client.send(b"error")
+    elif xxx.startswith("DELETE_ALL:"):
+        _, username, password = xxx.split(":")
+        if check_username_exist(username):
+            if Decrypt(message_=get_password(username), key=password).decrypt() is not None:
+                df = pd.read_csv('database.csv')
+                fieldname = 'username'
+                value_to_delete = username
+                df = df[df[fieldname] != value_to_delete]
+                df.to_csv('database.csv', index=False)
+                client.send(b"success")
+            else:
+                client.send(b"error")
+        else:
+            client.send(b"error")
+    elif xxx.startswith("PRIV:"):
+        try:
+            _, idd = xxx.split(":")
+            print("private")
+            client_thread = threading.Thread(target=handle_client, args=(client, address, idd,))
+            client_thread.start()
+        except Exception:
+            print("da fuck")
+            pass
+    elif xxx.startswith("GET_PUBLIC:"):
+        idd = xxx.split(":")[1]
+        if check_id_exist(idd):
+            print("Ok")
+            aa = get_public(idd)
+            if aa:
+                client.send(aa)
+            else:
+                client.send(b"error")
+        else:
+            print("nah")
+            client.send(b"error")
+    else:
+        if xxx.startswith("ID:::::"):
+            _, nickname, group_id = xxx.split("|||")
+            nicknames.append(nickname)
+
+            clients.append(client)
+            form.append({"client": client, "name": nickname})
+
+            print(f"{d1} {nickname} joined.")
+
+            thread = threading.Thread(target=handle, args=(client, d1, group_id,))
+            thread.start()
 
 
 def receive():
@@ -342,111 +463,7 @@ def receive():
             client, address = server.accept()
             print("Connected with {}".format(str(address)))
 
-            xxx = client.recv(1024).decode()
-
-            print("X", xxx)
-
-            if xxx == "PRIV:":
-                print("private")
-                oho = "True"
-                client_thread = threading.Thread(target=handle_client, args=(client, address, oho,))
-                client_thread.start()
-            elif xxx.startswith("SIGNUP:::"):
-                print("ye")
-                _, username, pas, idd = xxx.split(":::")
-                public_key = client.recv(1024).decode()
-
-                print(username, pas, idd)
-                if check_username_exist(username):
-                    client.send("error".encode())
-                else:
-
-                    if check_id_exist(idd):
-                        client.send("errorv2".encode())
-                    else:
-                        with open("database.csv", "a") as data_file_:
-                            data_file_.write(f"{username},{pas},{idd}\n")
-                        with open(f"public_{idd}.txt", "w") as file:
-                            file.write(public_key)
-                        client.send("success".encode())
-            elif xxx.startswith("LOGIN:::"):
-                _, username, password = xxx.split(":::")
-                print(username, password)
-                if not check_username_exist(username):
-                    client.send("error".encode())
-                else:
-                    pas = get_password(username)
-                    if Decrypt(message_=pas, key=password).decrypt() is not None:
-                        client.send(f"success:{get_id(username)}".encode())
-                    else:
-                        client.send("errorv2".encode())
-            elif xxx.startswith("CHANGE_USERNAME:"):
-                _, username, password, new_username = xxx.split(":")
-                if check_username_exist(username):
-                    if Decrypt(message_=get_password(username), key=password).decrypt() is not None:
-                        replace_value(username, new_username, "username")
-                        client.send(b"success")
-                    else:
-                        client.send(b"error")
-                else:
-                    client.send(b"error")
-            elif xxx.startswith("CHANGE_PASSWORD:"):
-                _, old, new, username = xxx.split(":")
-                if check_username_exist(username):
-                    if Decrypt(message_=get_password(username), key=old).decrypt() is not None:
-                        replace_value(get_password(username), Encrypt(message_=new, key=new).encrypt().decode(), "password")
-                        client.send(b"success")
-                    else:
-                        client.send(b"error")
-                else:
-                    client.send(b"error")
-            elif xxx.startswith("DELETE_ALL:"):
-                _, username, password = xxx.split(":")
-                if check_username_exist(username):
-                    if Decrypt(message_=get_password(username), key=password).decrypt() is not None:
-                        df = pd.read_csv('database.csv')
-                        fieldname = 'username'
-                        value_to_delete = username
-                        df = df[df[fieldname] != value_to_delete]
-                        df.to_csv('database.csv', index=False)
-                        client.send(b"success")
-                    else:
-                        client.send(b"error")
-                else:
-                    client.send(b"error")
-            elif xxx.startswith("PRIV:"):
-                try:
-                    _, idd = xxx.split(":")
-                    print("private")
-                    client_thread = threading.Thread(target=handle_client, args=(client, address, idd,))
-                    client_thread.start()
-                except Exception:
-                    print("da fuck")
-                    pass
-            elif xxx.startswith("GET_PUBLIC:"):
-                idd = xxx.split(":")[1]
-                if check_id_exist(idd):
-                    print("Ok")
-                    aa = get_public(idd)
-                    if aa:
-                        client.send(aa)
-                    else:
-                        client.send(b"error")
-                else:
-                    print("nah")
-                    client.send(b"error")
-            else:
-                if xxx.startswith("ID:::::"):
-                    _, nickname, group_id = xxx.split("|||")
-                    nicknames.append(nickname)
-
-                    clients.append(client)
-                    form.append({"client": client, "name": nickname})
-
-                    print(f"{d1} {nickname} joined.")
-
-                    thread = threading.Thread(target=handle, args=(client, d1, group_id,))
-                    thread.start()
+            threading.Thread(target=fuck_around, args=(client,address,d1,)).start()
 
         except KeyboardInterrupt:
             exit()
