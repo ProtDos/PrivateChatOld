@@ -1,7 +1,7 @@
 # Private Chat | Encochat
 ## Installation Guide
 
-###Pre-requisites
+### Pre-requisites
 Windows:
 You don't need any pre-requisites to run the .exe file.
 
