@@ -3,6 +3,9 @@ Experience secure and private communication with Encochat, the most private chat
 
 Currently available only online on [app.protdos.com](https://app.protdos.com/download).
 
+## Status
+This app is currently in development. There is no final product, just this source code. Have a look at it, maybe you will find any bugs or improvements. I work a lot on this and one day I will publish it, I first want to make sure there are no more bugs and the design is good enough.
+
 ## Contributing Bug reports
 We use GitHub for bug tracking. Please search the existing issues for your bug and create a new one if the issue is not yet tracked!
 
