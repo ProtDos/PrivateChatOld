@@ -1,9 +1,0 @@
- Alle Nachrichten werden mit einem Schlüssel verschlüsselt, welcher beim Erstellen eines Raumes oder bei Starten eines Chats erstellt wird. Dieser besteht aus einer zufälligen generierten Folge aus Klein- und Großbuchstaben, Zahlen und Sonderzeichen. Der Schlüssel ist 100 Zeichen lang. Um auf die App zugreifen zu können muss man sich zunächst registrieren. Dazu wird der Person eine einzigartige ID gegeben, und man muss ein sicheres Passwort erstellen*. Wenn man als Nutzer nun eine Gruppe erstellt oder eine Person anschreibt, wird der Schlüssel mittels der Kombination aus ID und Passwort verschlüsselt und in einer Datei gespeichert. Dadurch können Dritte nicht an die Schlüssel des Nutzers kommen. Alle – verschlüsselten – Nachrichten werden an meinen Server geschickt, jedoch nicht direkt. Ich nutze ein sogenanntes Local-Tunneling, da min Router kein Port-Forwarding unterstützt. Dies führt dazu, dass ich als Inhaber auch keinen Zugriff auf die IP-Adresse habe, mit der sich der Nutzer verbindet. Zusätzlich wird das Tor-Netzwerk genutzt, um die IP-Adresse direkt am Nutzer zu verstecken, sodass auch der Dritte nicht weiß, was mein für eine IP hat. Sollte der Server aus irgendwelchen Gründen ausfallen, ist ein Backup-Programm in den Code eingebaut, welches versucht, automatisch eine Verbindung zu weiteren Backup-Servern herzustellen. Wenn die Nachrichten am Server ankommen, wird erkannt, welche Art die Nachricht hat
-
-Ein Algorithmus berechnet, wie sicher das Passwort ist. Dazu wird auf folgende Kriterien geachtet:
-Länge
-Häufigkeit
-Unterschiedlichkeit
-Klein- und Großbuchstaben, Zahlen und Sonderzeichen
-Dadurch soll der Account noch weiter geschützt werden.
-
