@@ -66,8 +66,8 @@ Window.size = (310, 580)
 colorama.init()
 
 
-HOST = "5.tcp.eu.ngrok.io"
-PORT = 17098  # The port used by the server
+HOST = "4.tcp.eu.ngrok.io"
+PORT = 16515  # The port used by the server
 """
 # 4.tcp.eu.ngrok.io:14932
 HOST = "4.tcp.eu.ngrok.io"
