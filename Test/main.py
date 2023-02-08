@@ -4,7 +4,7 @@ from kivymd.uix.label import MDLabel
 from kivymd.toast import toast  # for sending toast messages
 
 # Kivy
-from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.screenmanager import ScreenManager
 from kivy.lang import Builder
 from kivy.clock import mainthread
 from kivy.core.text import LabelBase
@@ -50,8 +50,8 @@ Window.size = (310, 580)
 colorama.init()
 
 
-HOST = "localhost"
-PORT = 5000  # The port used by the server
+HOST = "2.tcp.eu.ngrok.io"
+PORT = 18289  # The port used by the server
 """
 # 4.tcp.eu.ngrok.io:14932
 HOST = "4.tcp.eu.ngrok.io"
@@ -177,21 +177,23 @@ def start_tor():
     os.system("torpy_socks -p 9050 --hops 3")
 
 
-def connect(use_tor=False):
+"""
+def self.connect(use_tor=False):
     global sock
     if use_tor:
         threading.Thread(target=start_tor).start()
         socks.set_default_proxy(socks.SOCKS5, "127.0.0.1", 9050)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((HOST, PORT))
+        sock.self.connect((HOST, PORT))
     else:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.connect((HOST, PORT))
+        sock.self.connect((HOST, PORT))
 
 
-connect(use_tor=False)
+self.connect(use_tor=False)
+"""
 
-
+"""
 class ChatScreen(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -200,7 +202,7 @@ class ChatScreen(Screen):
         self.key = None
 
         try:
-            sock.connect((HOST, PORT))
+            sock.self.connect((HOST, PORT))
         except OSError:
             pass
 
@@ -244,7 +246,6 @@ class ChatScreen(Screen):
 
     def receive_message(self):
         # print("started")
-        """Receive messages from the server and update the chat screen"""
         while True:
             if is_it_my_turn:
                 try:
@@ -354,6 +355,7 @@ class ChatScreen(Screen):
     def change2(self, message, size, halign):
         self.ids.chat_list.add_widget(
             Command(text=message, size_hint_x=size, halign=halign))  # size
+"""
 
 
 def strength_test(p):
@@ -419,18 +421,11 @@ class Response2(MDLabel):
     font_size = 12
 
 
-class FAQScreen(Screen):
-    def unfold_question(self, question_num):
-        question = self.ids.faq_list.children[question_num-1]
-        if question.is_selected:
-            question.secondary_text = ""
-            question.is_selected = False
-        else:
-            question.secondary_text = "Answer " + str(question_num)
-            question.is_selected = True
-
-
 class ChatApp(MDApp):
+    def connect(self):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.connect((HOST, PORT))
+        
     def change_screen(self, name):
         self.screen_manager.current = name
 
@@ -447,6 +442,9 @@ class ChatApp(MDApp):
         self.public_key = None
         self.private_key = None
 
+        # self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # self.sock.self.connect(("localhost", 5000))
+
         self.screen_manager = ScreenManager()
         self.screen_manager.add_widget(Builder.load_file("login.kv"))
         self.screen_manager.add_widget(Builder.load_file("home.kv"))
@@ -455,7 +453,6 @@ class ChatApp(MDApp):
         self.screen_manager.add_widget(Builder.load_file("main.kv"))
         self.screen_manager.add_widget(Builder.load_file("group_create.kv"))
         self.screen_manager.add_widget(Builder.load_file("group_join.kv"))
-        self.screen_manager.add_widget(Builder.load_file("group.kv"))
         self.screen_manager.add_widget(Builder.load_file("group.kv"))
         self.screen_manager.add_widget(Builder.load_file("password_reset.kv"))
         self.screen_manager.add_widget(Builder.load_file("chat_new_private.kv"))
@@ -468,13 +465,12 @@ class ChatApp(MDApp):
         self.screen_manager.add_widget(Builder.load_file("show_qr.kv"))
         self.screen_manager.add_widget(Builder.load_file("show_qr2.kv"))
         self.screen_manager.add_widget(Builder.load_file("show_id.kv"))
-        # self.asd = ChatScreen(name='chat')
-        # self.screen_manager.add_widget(self.asd)
+        self.screen_manager.add_widget(Builder.load_file("chat.kv"))
 
         return self.screen_manager
 
     def sign_up(self, username, password, password2):
-        connect()
+        self.connect()
         global user
         self.screen_manager.get_screen("home").welcome_name.text = f"Welcome {self.username}"
         self.screen_manager.get_screen("signup").username.text = ""
@@ -492,10 +488,10 @@ class ChatApp(MDApp):
             return
         uid = str(uuid.uuid4())
         public, private = rr.newkeys(1024)
-        sock.send(f"SIGNUP:::{username}:::{hash_pwd(password)}:::{uid}".encode())
+        self.sock.send(f"SIGNUP:::{username}:::{hash_pwd(password)}:::{uid}".encode())
         print("nah bruh")
-        sock.send(public.save_pkcs1())
-        r = sock.recv(1024).decode()
+        self.sock.send(public.save_pkcs1())
+        r = self.sock.recv(1024).decode()
         if r == "error":
             self.show_toaster("Username taken. Try again.")
             return
@@ -529,7 +525,7 @@ class ChatApp(MDApp):
         self.show_toaster("Account created!")
 
     def login(self, username, password):
-        connect()
+        self.connect()
         global user
         self.screen_manager.get_screen("login").username.text = ""
         self.screen_manager.get_screen("login").password.text = ""
@@ -557,8 +553,8 @@ class ChatApp(MDApp):
             else:
                 self.screen_manager.current = "bad"
             """
-            sock.send(f"LOGIN:::{username}:::{hash_pwd(password)}".encode())
-            r = sock.recv(1024).decode()
+            self.sock.send(f"LOGIN:::{username}:::{hash_pwd(password)}".encode())
+            r = self.sock.recv(1024).decode()
             # print(r)
             if r == "error":
                 self.show_toaster("Invalid username")
@@ -601,7 +597,7 @@ class ChatApp(MDApp):
             time.sleep(.5)
             self.screen_manager.get_screen("home").username_icon.icon = "account-cog"
 
-            connect()
+            self.connect()
             sock.send(f"CHANGE_USERNAME:{self.username}:{self.password}:{username}".encode())
             r = sock.recv(1024).decode()
             if r == "success":
@@ -619,7 +615,7 @@ class ChatApp(MDApp):
         with open("data/auth.txt", "w") as file:
             file.write(Encrypt(message_=new, key=new).encrypt().decode())
         """
-        connect()
+        self.connect()
         sock.send(f"CHANGE_PASSWORD:{self.password}:{new}:{self.username}".encode())
         r = sock.recv(1024).decode()
         if r == "success":
@@ -663,19 +659,19 @@ class ChatApp(MDApp):
         is_it_my_turn = False
         personal = self.username + "#" + self.id
 
-        connect()
-        sock.send(f"GET_PUBLIC:{rec}".encode())
-        public_key = sock.recv(1024)
+        self.connect()
+        self.sock.send(f"GET_PUBLIC:{rec}".encode())
+        public_key = self.sock.recv(1024)
         print("Public key of rec:", public_key)
         if public_key != "error":
             public = rr.PublicKey.load_pkcs1(public_key)
             print("Loaded key of rec:", public)
             self.aaa = public
 
-            connect()
+            self.connect()
 
-            sock.send("PRIV:".encode())
-            sock.send(personal.encode())
+            self.sock.send("PRIV:".encode())
+            self.sock.send(personal.encode())
             name = "b"
             """
             open(f"2\\{rec}.txt", 'w').close()
@@ -705,14 +701,14 @@ class ChatApp(MDApp):
         is_it_my_turn = False
         personal = self.username + "#" + self.id
 
-        connect()
-        sock.send(f"GET_PUBLIC:{rec}".encode())
-        public_key = sock.recv(1024)
+        self.connect()
+        self.sock.send(f"GET_PUBLIC:{rec}".encode())
+        public_key = self.sock.recv(1024)
 
-        connect()
+        self.connect()
 
-        sock.send("PRIV:".encode())
-        sock.send(personal.encode())
+        self.sock.send("PRIV:".encode())
+        self.sock.send(personal.encode())
         open(f"2\\{rec}.txt", 'w').close()
         current_private_key = key
         current_chat_with = rec
@@ -769,15 +765,15 @@ class ChatApp(MDApp):
         while True:
             try:
                 print("Chat with:", current_chat_with)
-                message = sock.recv(1024)
+                message = self.sock.recv(1024)
                 print(message)
                 message = message.decode()
                 print("Message received:", message)
                 if message:
                     if message == "NICK":
-                        sock.send(self.username.encode())
+                        self.sock.send(self.username.encode())
                     elif message.split("#")[1].startswith(current_chat_with):
-                        m = sock.recv(1024)
+                        m = self.sock.recv(1024)
                         print("Shorted message:", m)
                         print("Decrypted:", rr.decrypt(m, self.private_key))
                         m = rr.decrypt(m, self.private_key).decode()
@@ -789,7 +785,7 @@ class ChatApp(MDApp):
                         self.add(m)
                     elif message.startswith(f"INCOMING:{self.username}#{self.id}"):
                         print("OOOOOKAY")
-                        m = sock.recv(1024)
+                        m = self.sock.recv(1024)
                         m = rr.decrypt(m, self.private_key).decode()
                         self.add(m)
                     else:
@@ -864,7 +860,7 @@ class ChatApp(MDApp):
                 global group_key, sock, is_it_my_turn
                 is_it_my_turn = True
 
-                connect()
+                self.connect()
 
                 key = self.rooms[group_id]
                 name = key.split("|")[0]
@@ -882,7 +878,7 @@ class ChatApp(MDApp):
                 global group_key, sock, is_it_my_turn
                 is_it_my_turn = True
 
-                connect()
+                self.connect()
 
                 name = key.split("|")[0]
                 self.screen_manager.get_screen("chat").kkk.text = key
@@ -900,8 +896,6 @@ class ChatApp(MDApp):
 
     def create_group(self, name):
         if name != "":
-            self.screen_manager.remove_widget(self.asd)
-            self.screen_manager.add_widget(self.asd)
             self.screen_manager.get_screen("group_create").name_.text = ""
 
             global group_key, sock, is_it_my_turn
@@ -919,12 +913,132 @@ class ChatApp(MDApp):
                 # print(encc)
                 file.write(f"{encc}\n")
 
-            connect()
+            self.connect()
 
-            sock.send(("ID::::::" + "|||" + self.username + "|||" + group_id).encode())
+            self.sock.send(("ID::::::" + "|||" + self.username + "|||" + group_id).encode())
             # sock.send(f"ID::::::{group_id}".encode())
-            self.screen_manager.current = "chat"
+
             self.screen_manager.get_screen("chat").chat_list.clear_widgets()
+            self.screen_manager.get_screen("chat").bot_name.text = name
+            # self.screen_manager.get_screen("chat_sec").kkk.text = key
+
+            threading.Thread(target=self.receive_messages).start()
+
+            self.screen_manager.current = "chat"
+
+    @mainthread
+    def send_message_aaa(self, message, _):
+        self.sock.send('{}: {}'.format(user, Encrypt(message_=message, key=group_key).encrypt().decode()).encode())
+        global size, halign, value
+        if message != "":
+            value = message
+            if len(value) < 6:
+                size = .22
+                halign = "center"
+            elif len(value) < 6:
+                size = .22
+                halign = "center"
+            elif len(value) < 11:
+                size = .32
+                halign = "center"
+            elif len(value) < 16:
+                size = .45
+                halign = "center"
+            elif len(value) < 21:
+                size = .58
+                halign = "center"
+            elif len(value) < 26:
+                size = .71
+                halign = "center"
+            else:
+                size = .7
+                halign = "left"
+
+            self.screen_manager.get_screen("chat").chat_list.add_widget(
+                Command(text=message, size_hint_x=size, halign=halign))
+
+            self.screen_manager.get_screen("chat").text_input.text = ""
+
+    def receive_messages(self):
+        while True:
+            try:
+                message = self.sock.recv(1024).decode()
+                try:
+                    sender = message.split(": ")[0]
+                    message = Decrypt(message_=message.split(": ")[1], key=group_key).decrypt()
+                except:
+                    sender = None
+                    pass
+                if message is not None:
+                    if message:
+                        if message == "NICK":
+                            self.sock.send(user.encode())
+                        elif message == "FILE_INCOMING":
+                            filename = Decrypt(message_=self.sock.recv(1024).decode(), key=group_key).decrypt()
+
+                            sender = self.sock.recv(1024).decode()
+
+                            al = []
+
+                            while True:
+                                more_data = self.sock.recv(1024).decode()
+                                if more_data.endswith(":"):
+                                    more_data = more_data[:-7]
+                                    al.append(more_data)
+                                    break
+                                else:
+                                    al.append(more_data)
+
+                            data = "".join(al)
+                            more3_data = Decrypt_File(message_=data, key=group_key).decrypt()
+                            # print(more3_data)
+                            k = f"{uuid.uuid4()}-{filename}"
+
+                            kk = os.path.join(os.path.dirname(os.path.abspath(__file__)), k)
+
+                            with open(kk, "w") as file:
+                                file.write(more3_data)
+
+                            os.startfile(kk)
+                            self.add2(filename, fro=sender)
+
+                        else:
+                            self.add2(message, fro=sender)
+                            print("Message:", message)
+                    else:
+                        break
+            except Exception as e:
+                print("Error:", e)
+                continue
+
+    @mainthread
+    def add2(self, message, fro):
+        global size, halign, value
+        if message != "":
+            value = message
+            if len(value) < 6:
+                size = .22
+                halign = "center"
+            elif len(value) < 6:
+                size = .22
+                halign = "center"
+            elif len(value) < 11:
+                size = .32
+                halign = "center"
+            elif len(value) < 16:
+                size = .45
+                halign = "center"
+            elif len(value) < 21:
+                size = .58
+                halign = "center"
+            elif len(value) < 26:
+                size = .71
+                halign = "center"
+            else:
+                size = .7
+                halign = "left"
+        self.screen_manager.get_screen("chat").chat_list.add_widget(
+            Response(text=message, size_hint_x=size, halign=halign))
 
     @mainthread
     def send_message_private(self, message, _):
@@ -932,9 +1046,9 @@ class ChatApp(MDApp):
         # sock.send(("/pm " + current_chat_with + " " + Encrypt(message_=message, key=key).encrypt().decode()).encode())
         enc = rr.encrypt(message.encode(), self.aaa)
         print("Encrypted message:", enc)
-        sock.send(f"/pm {current_chat_with}".encode())
+        self.sock.send(f"/pm {current_chat_with}".encode())
         print("First sent")
-        sock.send(enc)
+        self.sock.send(enc)
         print("Second sent")
         # sock.send(("/pm " + current_chat_with + " " + message).encode())
         # sock.send(f"/pm {current_chat_with} {rr.encrypt(message.encode(), key)}".encode())
@@ -992,19 +1106,19 @@ class ChatApp(MDApp):
             with open(filename, 'r') as file:
                 sendfile = file.read()
 
-            sock.send("FILE:::::".encode())
+            self.sock.send("FILE:::::".encode())
 
-            sock.send(f"{Encrypt(message_=filename, key=group_key).encrypt().decode()}".encode())
+            self.sock.send(f"{Encrypt(message_=filename, key=group_key).encrypt().decode()}".encode())
 
             # print(sendfile)
 
-            sock.send(self.username.encode())
+            self.sock.send(self.username.encode())
 
             content = Encrypt_File(message_=sendfile, key=group_key).encrypt()
             print(content)
-            sock.send(content)
+            self.sock.send(content)
 
-            sock.send("DONE:".encode())
+            self.sock.send("DONE:".encode())
 
             self.screen_manager.get_screen("chat").chat_list.add_widget(
                 Command(text=filename, size_hint_x=.75, halign="center"))
@@ -1013,9 +1127,9 @@ class ChatApp(MDApp):
         try:
             self.screen_manager.current = "signup"
             self.show_toaster("Your data will now be deleted.")
-            connect()
-            sock.send(f"DELETE_ALL:{self.username}:{self.password}".encode())
-            r = sock.recv(1024).decode()
+            self.connect()
+            self.sock.send(f"DELETE_ALL:{self.username}:{self.password}".encode())
+            r = self.sock.recv(1024).decode()
             if r == "success":
                 """
                 print("[i] Deleting groups.csv")
