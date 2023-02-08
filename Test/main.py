@@ -33,7 +33,6 @@ import time  # sleep function
 from plyer import filechooser, notification  # File Choosing to send them to others, sending notifications
 import qrcode  # creating QR-Codes (for the keys)
 import colorama  # Terminal coloring
-import socks  # TOR-Proxy
 import pyperclip as pc  # For copying text
 
 """
@@ -48,7 +47,6 @@ Done...
 Window.size = (310, 580)
 
 colorama.init()
-
 
 HOST = "2.tcp.eu.ngrok.io"
 PORT = 18289  # The port used by the server
@@ -1182,7 +1180,7 @@ class ChatApp(MDApp):
 
 if __name__ == "__main__":
     LabelBase.register(name="MPoppins",
-                       fn_regular="C:\\Users\\Admin\\PycharmProjects\\Encryptor\\MOBILE\\GUI\\fonts\\Poppins\\Poppins-Medium.ttf")  # Medium
+                       fn_regular="fonts\\Poppins\\Poppins-Medium.ttf")  # Medium
     LabelBase.register(name="BPoppins",
-                       fn_regular="C:\\Users\\Admin\\PycharmProjects\\Encryptor\\MOBILE\\GUI\\fonts\\Poppins\\Poppins-SemiBold.ttf")  # Semi-Bold
+                       fn_regular="fonts\\Poppins\\Poppins-SemiBold.ttf")  # Semi-Bold
     ChatApp().run()
