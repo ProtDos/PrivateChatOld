@@ -1171,7 +1171,7 @@ class ChatApp(MDApp):
     def show_id(self):
         pc.copy(self.id)
         qr = qrcode.make(self.id)
-        qr.save("C:\\Users\\Admin\\PycharmProjects\\Encryptor\\MOBILE\\GUI\\assets\\qr_code_id.png")
+        qr.save("assets\\qr_code_id.png")
 
         self.screen_manager.get_screen("show_id").img.reload()
 
