@@ -32,8 +32,7 @@ import secrets  # creating strong keys (real randomness)
 import time  # sleep function
 from plyer import filechooser, notification  # File Choosing to send them to others, sending notifications
 import qrcode  # creating QR-Codes (for the keys)
-import pyperclip as pc  # For copying text
-
+from kivy.core.clipboard import Clipboard
 
 """
 - Encrypt Private Messaging
@@ -3458,7 +3457,8 @@ class ChatApp(MDApp):
         print("message clicked")
 
     def show_id(self):
-        pc.copy(self.id)
+        # pc.copy(self.id)
+        Clipboard.copy(self.id)
         qr = qrcode.make(self.id)
         qr.save("qr_code_id.png")
 
