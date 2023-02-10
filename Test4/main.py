@@ -2520,7 +2520,8 @@ MDScreen:
 from kivy.utils import platform
 if platform == "android":
     from android.permissions import request_permissions, Permission
-    request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE, Permission.INTERNET])
+    request_permissions([Permission.INTERNET])
+    request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
 
 
 # Window.size = (310, 580)
@@ -2712,6 +2713,18 @@ class Decrypt_File:
 ######################### Main #########################
 class ChatApp(MDApp):
     def build(self):
+        self.username = ""
+        self.password = ""
+        self.id = ""
+        self.rooms = []
+        self.mf_key_group_bla = ""
+        self.super_dubba_key = ""
+
+        self.aaa = None
+
+        self.public_key = None
+        self.private_key = None
+
         self.screen_manager = ScreenManager()
         self.screen_manager.add_widget(Builder.load_string(login))
         self.screen_manager.add_widget(Builder.load_string(home))
@@ -2803,7 +2816,7 @@ class ChatApp(MDApp):
         global user
         self.screen_manager.get_screen("login").username.text = ""
         self.screen_manager.get_screen("login").password.text = ""
-        self.screen_manager.get_screen("home").welcome_name.text = f"Welcome {self.username}"
+        # self.screen_manager.get_screen("home").welcome_name.text = f"Welcome {self.username}"
         try:
             """
             with open("data/username.txt", "r") as file:
