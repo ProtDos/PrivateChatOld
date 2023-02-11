@@ -49,34 +49,5 @@ After you have downloaded the .apk file you can run it by simply pressing it and
 ### Disclaimer
 Please only use this GitHub and our website to download the app, no third party services. Someone could imitaty us and implement a hidden backdoor / trojan or a fake server to read your messages. If you want to be very secure, you can compile the source code to an .exe or .apk. This is how:
 
-### Compiling
-.exe
-(not tested)
-```
-pip install pyinstaller
-git clone https://github.com/ProtDos/PrivateChat
-cd PrivateChat/PrivateChat
-pyinstaller --onefile main.py
-```
-
-.apk
-(You need a linux machine)
-```
-pip3 install --user --upgrade buildozer
-sudo apt update
-sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
-pip3 install --user --upgrade Cython==0.29.19 virtualenv
-
-git clone https://github.com/ProtDos/PrivateChat
-cd PrivateChat/PrivateChat
-
-export PATH=$PATH:~/.local/bin/
-
-buildozer -v android debug
-```
-The finished a.pk file will be in the /bin/ folder in the current directory. Just run `cd /bin` to get to the file.
-Pro-tip: 
-To move the file to your windows downloads folder (when you run for example ubuntu as a subsystem) you can run this code: `mv <app name> /mnt/c/Users/<your_username>/Downloads`
-
 ### Errors
-If you have problems installing or compiling this project, please do not hesitate to create an issue.
+If you have problems installing this project, please do not hesitate to create an issue.
