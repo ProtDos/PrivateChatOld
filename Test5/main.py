@@ -2536,9 +2536,9 @@ current_chat_with = ""
 is_it_my_turn = False
 
 # 2.tcp.eu.ngrok.io:13117
-# HOST = "7.tcp.eu.ngrok.io"
-# PORT = 13632  # The port used by the server
-HOST, PORT = requests.get("https://api.protdos.com/").text.split(":")
+# HOST = "5.tcp.eu.ngrok.io"
+# PORT = 15921  # The port used by the server
+HOST, PORT = requests.get("https://api.protdos.com").text.split(":")
 
 
 ######################### Chat #########################

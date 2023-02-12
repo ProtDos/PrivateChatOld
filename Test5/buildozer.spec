@@ -13,7 +13,7 @@ package.domain = org.test
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,kv,atlas,ttf,txt
+source.include_exts = py,png,jpg,kv,atlas,ttf,txt,mp4,json
 
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
@@ -37,7 +37,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy==2.1.0,kivy-garden,pillow,pygments,certifi,cffi,charset_normalizer,android,colorama,cryptography,docutils,idna,kivymd==1.1.1,password_strength,plyer,pyasn1,pycparser,pypiwin32,pypng,qrcode,requests,rsa,six,typing_extensions,urllib3
+requirements = python3,kivy==2.1.0,kivy_garden,pillow,pygments,hostpython3,openssl,certifi,cffi,chardet,charset_normalizer,android,colorama,cryptography,docutils,idna,kivymd==1.1.1,password_strength,plyer,pyasn1,pycparser,pypiwin32,pypng,qrcode,requests,rsa,six,typing_extensions,urllib3
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -45,7 +45,7 @@ requirements = python3,kivy==2.1.0,kivy-garden,pillow,pygments,certifi,cffi,char
 
 # (str) Presplash of the application
 #presplash.filename = %(source.dir)s/data/presplash.png
-presplash.filename = 6.svg
+#presplash.filename = presplash.png
 
 
 # (str) Icon of the application
@@ -89,7 +89,7 @@ fullscreen = 0
 # see https://lottiefiles.com/ for examples and https://airbnb.design/lottie/
 # for general documentation.
 # Lottie files can be created using various tools, like Adobe After Effect or Synfig.
-#android.presplash_lottie = "path/to/lottie/file.json"
+android.presplash_lottie = loading.json
 
 # (str) Adaptive icon of the application (used if Android API level is 26+ at runtime)
 #icon.adaptive_foreground.filename = %(source.dir)s/data/icon_fg.png
