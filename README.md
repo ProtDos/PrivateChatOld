@@ -30,7 +30,7 @@ Help
 ## Support
 For troubleshooting and questions, please create an issue
 
-https://github.com/PrtoDos/PrivateChat/issues
+https://github.com/ProtDos/PrivateChat/issues
 
 ## Documentation
 Looking for documentation? Check out the website!
